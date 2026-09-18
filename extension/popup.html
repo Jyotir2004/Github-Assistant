@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub AI Assistant</title>
+  <style>
+    body {
+      width: 280px;
+      margin: 0;
+      padding: 16px;
+      background: #0d1117;
+      color: #f0f6fc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .status-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .status-badge {
+      color: #10b981;
+      font-weight: 600;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #f0f6fc;
+    }
+    .btn:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">⚡</div>
+    <div>
+      <div class="title">GitHub AI Assistant</div>
+      <div style="font-size: 10px; color: #8b949e;">Chrome Injected Copilot</div>
+    </div>
+  </div>
+
+  <div class="status-card">
+    <div class="status-row">
+      <span style="color: #8b949e;">Backend:</span>
+      <span id="backendStatus" class="status-badge">Connecting...</span>
+    </div>
+    <div class="status-row">
+      <span style="color: #8b949e;">Inference Model:</span>
+      <span style="font-weight: 600; color: #a5b4fc;">Groq 120B</span>
+    </div>
+    <div class="status-row">
+      <span style="color: #8b949e;">User:</span>
+      <span style="font-weight: 600;">@Jyotir2004</span>
+    </div>
+  </div>
+
+  <a href="http://localhost:5000" target="_blank" class="btn btn-primary">Open Full Web App ↗</a>
+  <a href="https://github.com/Jyotir2004" target="_blank" class="btn btn-secondary">Go to GitHub Profile</a>
+
+  <script src="popup.js"></script>
+</body>
+</html>

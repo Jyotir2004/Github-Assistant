@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub AI Assistant — Autonomous Code Intelligence & RAG</title>
+  <meta name="description" content="AI Assistant that understands GitHub repositories with ChromaDB vector embeddings, deep code comprehension, bug audits, test generation, and multi-agent reasoning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Prism.js for syntax highlighting in code viewer -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <!-- Marked.js for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="dark-theme">
+  <!-- Glow background blobs -->
+  <div class="blob-bg blob-1"></div>
+  <div class="blob-bg blob-2"></div>
+  <div class="blob-bg blob-3"></div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+            <path d="M9 18c-4.51 2-5-2-7-2"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">GitHub <span class="gradient-text">AI Assistant</span></span>
+          <span class="brand-tag">RAG • Multi-Agent</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <!-- Repo Selector Bar -->
+      <div class="repo-select-container">
+        <span class="input-icon">📦</span>
+        <select id="repoSelect" class="repo-dropdown">
+          <option value="">Loading repositories...</option>
+        </select>
+        <button id="refreshReposBtn" class="icon-btn" title="Refresh repositories">↻</button>
+        <button id="newRepoBtn" class="btn btn-create-repo" title="Create New Repository on GitHub">
+          <span class="btn-icon">＋</span>
+          <span>New Repo</span>
+        </button>
+      </div>
+      <div id="syncBadge" class="sync-badge" title="Auto-Sync: Actively watches for newly created GitHub repositories and automatically updates & indexes them.">
+        <span class="sync-pulse"></span>
+        <span id="syncStatusText">Auto-Sync On</span>
+      </div>
+      <button id="indexRepoBtn" class="btn btn-secondary index-btn">
+        <span class="btn-icon">🧠</span>
+        <span id="indexBtnText">Index with ChromaDB</span>
+        <span id="indexStatusPill" class="status-pill idle">Idle</span>
+      </button>
+    </div>
+
+    <div class="header-right">
+      <div class="model-badge" title="Active LLM Inference Engine">
+        <span class="model-dot"></span>
+        <span id="activeModelName">Groq 120B</span>
+      </div>
+      <div id="userBadge" class="user-badge" title="Authenticated User">
+        <img id="userAvatar" src="https://github.com/identicons/app.png" alt="User" class="user-avatar" />
+        <span id="userName" class="user-login">Jyotir2004</span>
+      </div>
+      <button id="settingsBtn" class="btn btn-icon-only" title="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Repo Overview Bar -->
+  <section class="repo-meta-bar" id="repoMetaBar">
+    <div class="repo-info-pill">
+      <span class="repo-full-name" id="repoFullName">Select a repository</span>
+      <span class="repo-desc" id="repoDescription">Choose one from your GitHub repositories above</span>
+    </div>
+    <div class="repo-stats-pills" id="repoStatsPills" style="display: none;">
+      <span class="stat-tag"><span class="tag-icon">⭐</span> <span id="statStars">0</span></span>
+      <span class="stat-tag"><span class="tag-icon">🍴</span> <span id="statForks">0</span></span>
+      <span class="stat-tag"><span class="tag-icon">🌿</span> <span id="statBranch">main</span></span>
+      <span class="stat-tag primary-tag"><span class="tag-icon">🏷️</span> <span id="statLanguage">Python</span></span>
+      <span class="stat-tag chroma-tag"><span class="tag-icon">🗄️</span> <span id="statChunks">0 Chunks Indexed</span></span>
+    </div>
+  </section>
+
+  <!-- Main Grid Workspace -->
+  <main class="main-workspace">
+    <!-- Left Workspace: File Tree + Code Viewer -->
+    <div class="workspace-left">
+      <!-- Nav Tabs -->
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-target="tabFiles">
+          <span class="tab-icon">📁</span> Files & Folders
+        </button>
+        <button class="nav-tab" data-target="tabIssues">
+          <span class="tab-icon">🔀</span> Issues & PRs
+        </button>
+        <button class="nav-tab" data-target="tabCommits">
+          <span class="tab-icon">🕒</span> Commits
+        </button>
+      </div>
+
+      <div class="tab-content-container">
+        <!-- Tab 1: Files -->
+        <div class="tab-pane active" id="tabFiles">
+          <div class="file-browser-container">
+            <div class="file-tree-sidebar">
+              <div class="file-search-box">
+                <input type="text" id="fileSearchInput" placeholder="Filter files (e.g. .py, auth)..." />
+              </div>
+              <div class="file-tree-list" id="fileTreeList">
+                <div class="empty-state">No repository loaded yet.</div>
+              </div>
+            </div>
+
+            <!-- Code Viewer Area -->
+            <div class="code-viewer-panel">
+              <div class="code-header">
+                <div class="code-breadcrumb">
+                  <span class="file-icon">📄</span>
+                  <span id="activeFilePath">Select a file from the explorer</span>
+                </div>
+                <div class="code-actions">
+                  <button id="copyCodeBtn" class="btn-text-sm" title="Copy code">📋 Copy</button>
+                </div>
+              </div>
+
+              <!-- AI Code Quick Actions Toolbar -->
+              <div class="code-ai-toolbar" id="codeAiToolbar">
+                <span class="toolbar-label">AI Actions:</span>
+                <button class="action-chip" id="actExplain">🔍 Explain</button>
+                <button class="action-chip highlight-chip" id="actBugs">🐛 Find Bugs</button>
+                <button class="action-chip" id="actTests">🧪 Tests</button>
+                <button class="action-chip" id="actOptimize">⚡ Optimize</button>
+                <button class="action-chip" id="actReadme">📝 README</button>
+                <button class="action-chip" id="actArch">🏛️ Architecture</button>
+              </div>
+
+              <div class="code-editor-container">
+                <pre id="codePre"><code id="codeBlock" class="language-plaintext">// Select a source file to view code and run AI diagnostics...</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Issues & PRs -->
+        <div class="tab-pane" id="tabIssues">
+          <div class="issues-container" id="issuesList">
+            <div class="empty-state">Select a repository to view issues & PRs.</div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Commits -->
+        <div class="tab-pane" id="tabCommits">
+          <div class="commits-container" id="commitsList">
+            <div class="empty-state">Select a repository to view commit history.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Workspace: RAG AI Copilot Chat -->
+    <aside class="workspace-right">
+      <div class="chat-header">
+        <div class="chat-title-group">
+          <div class="ai-avatar">🤖</div>
+          <div>
+            <h2 class="chat-heading">Repository AI Copilot</h2>
+            <span class="chat-subheading">Context-Aware RAG Engine</span>
+          </div>
+        </div>
+        <div class="chat-controls">
+          <label class="rag-toggle" title="Toggle ChromaDB Vector Retrieval">
+            <input type="checkbox" id="ragToggle" checked />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">RAG</span>
+          </label>
+          <button id="clearChatBtn" class="icon-btn-sm" title="Clear chat history">🗑️</button>
+        </div>
+      </div>
+
+      <!-- Quick Prompt Suggestions -->
+      <div class="quick-prompts-bar">
+        <button class="quick-prompt-btn" data-prompt="Give me a high-level overview of this entire repository.">📖 Overview</button>
+        <button class="quick-prompt-btn" data-prompt="Where is the main entry point and how does the application start?">🚀 Entrypoint</button>
+        <button class="quick-prompt-btn" data-prompt="Are there any security issues or vulnerabilities in the codebase?">🛡️ Security Audit</button>
+        <button class="quick-prompt-btn" data-prompt="Explain how data flow and core state management work here.">🔄 Data Flow</button>
+      </div>
+
+      <!-- Chat Feed -->
+      <div class="chat-feed" id="chatFeed">
+        <div class="chat-msg assistant">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">
+            <p><strong>Welcome to your GitHub AI Assistant!</strong></p>
+            <p>I can index your repositories into <strong>ChromaDB</strong>, explore every folder, explain your code, pinpoint security bugs, and craft unit tests or complete documentation.</p>
+            <p>Pick one of your repositories above to get started!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="chat-input-area">
+        <div class="active-file-indicator" id="activeFileIndicator" style="display: none;">
+          <span class="indicator-icon">📎</span>
+          <span id="attachedFileName">active_file.py</span>
+          <button id="detachFileBtn" class="detach-btn" title="Remove file context">×</button>
+        </div>
+        <div class="input-box-wrapper">
+          <textarea id="chatInput" placeholder="Ask anything about this repo, files, or functions..." rows="1"></textarea>
+          <button id="sendChatBtn" class="send-btn" title="Send query">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- AI Action Result Modal -->
+  <div class="modal-overlay" id="actionModal" style="display: none;">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span id="modalIcon" class="modal-icon">✨</span>
+          <h3 id="modalTitle">AI Code Analysis</h3>
+        </div>
+        <button class="modal-close" id="closeActionModal">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="loading-spinner-container">
+          <div class="spinner"></div>
+          <p>Analyzing with Groq AI...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="commitActionBtn" class="btn btn-secondary" title="Directly commit this generated file/fix to GitHub">🚀 Commit to GitHub</button>
+        <button id="createPrActionBtn" class="btn btn-secondary" title="Create a new branch and open a Pull Request on GitHub">🔀 Create Pull Request</button>
+        <button id="copyModalContentBtn" class="btn btn-secondary">📋 Copy Output</button>
+        <button id="closeModalBtn" class="btn btn-primary">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Commit to GitHub Modal -->
+  <div class="modal-overlay" id="commitModal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🚀</span>
+          <h3 id="commitModalTitle">Commit to GitHub</h3>
+        </div>
+        <button class="modal-close" id="closeCommitModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="commitFilePath">File Path:</label>
+          <input type="text" id="commitFilePath" placeholder="path/to/file.py" />
+        </div>
+        <div class="form-group">
+          <label for="commitBranch">Target Branch:</label>
+          <input type="text" id="commitBranch" placeholder="main" value="main" />
+          <small>Creates or updates the file on this branch.</small>
+        </div>
+        <div class="form-group">
+          <label for="commitMessage">Commit Message:</label>
+          <input type="text" id="commitMessage" placeholder="fix: resolve bug identified by AI assistant" />
+        </div>
+        <div class="form-group" id="prFieldsGroup" style="display: none;">
+          <label for="prTitle">Pull Request Title:</label>
+          <input type="text" id="prTitle" placeholder="Fix: AI proposed bugfix" />
+          <label for="prBody" style="margin-top: 8px;">Pull Request Description:</label>
+          <textarea id="prBody" rows="3" style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 4px; font-family: inherit; font-size: 0.8rem;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelCommitBtn" class="btn btn-secondary">Cancel</button>
+        <button id="submitCommitBtn" class="btn btn-primary">Push to GitHub</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">⚙️</span>
+          <h3>Settings & API Configuration</h3>
+        </div>
+        <button class="modal-close" id="closeSettingsModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="settingGithubToken">GitHub Personal Access Token (PAT):</label>
+          <input type="password" id="settingGithubToken" placeholder="github_pat_..." />
+          <small>Controls access to private/public repositories.</small>
+        </div>
+        <div class="form-group">
+          <label for="settingGroqKey">Groq API Key:</label>
+          <input type="password" id="settingGroqKey" placeholder="gsk_..." />
+          <small>Powers lightning-fast code analysis and chat inference.</small>
+        </div>
+        <div class="form-group">
+          <label for="settingModel">Inference Model:</label>
+          <select id="settingModel">
+            <option value="openai/gpt-oss-120b">openai/gpt-oss-120b (Ultra Fast 120B Reasoning - Recommended)</option>
+            <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b (Fast 27B Model)</option>
+            <option value="openai/gpt-oss-20b">openai/gpt-oss-20b (Lightweight Model)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ChromaDB Vector Store:</label>
+          <div class="status-box">
+            <span>Status: <strong class="text-emerald">Active</strong></span>
+            <span>Path: <code>./data/chroma_db</code></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New Repository Modal -->
+  <div id="newRepoModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🚀</span>
+          <h3 id="newRepoModalTitle">Create New Repository</h3>
+        </div>
+        <button id="closeNewRepoModal" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-content">
+        <p class="modal-subtext" style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+          Create a new repository on your GitHub account. The AI Assistant will immediately register, select, and index it with ChromaDB.
+        </p>
+        <div class="form-group">
+          <label for="newRepoName">Repository Name <span style="color: var(--danger-color, #ef4444);">*</span>:</label>
+          <input type="text" id="newRepoName" placeholder="e.g. ai-cloud-platform" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="newRepoDesc">Description (optional):</label>
+          <input type="text" id="newRepoDesc" placeholder="Brief overview of the repository..." autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Repository Visibility:</label>
+          <div class="radio-row" style="display: flex; gap: 1.5rem; margin-top: 0.35rem;">
+            <label class="radio-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="newRepoVisibility" value="public" checked />
+              <span>Public (visible to everyone)</span>
+            </label>
+            <label class="radio-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="radio" name="newRepoVisibility" value="private" />
+              <span>Private 🔒</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group checkbox-group" style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+          <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.88rem;">
+            <input type="checkbox" id="newRepoAutoInit" checked />
+            <span>Initialize with a <code>README.md</code></span>
+          </label>
+          <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.88rem;">
+            <input type="checkbox" id="newRepoAutoIndex" checked />
+            <span style="color: #38bdf8; font-weight: 500;">🧠 Auto-index with ChromaDB for instant RAG Code Intelligence</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button id="cancelNewRepoBtn" class="btn btn-secondary">Cancel</button>
+        <button id="submitNewRepoBtn" class="btn btn-primary">
+          <span class="btn-icon">⚡</span>
+          <span id="submitNewRepoText">Create & Auto-Index</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Prism.js script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

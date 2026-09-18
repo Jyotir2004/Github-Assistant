@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub AI Assistant Copilot",
+  "version": "1.0.0",
+  "description": "Injected AI Copilot icon and drawer directly on GitHub pages for code explanation, bug detection, and RAG chat.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://github.com/*",
+    "http://127.0.0.1:5000/*",
+    "http://localhost:5000/*",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ]
+}
