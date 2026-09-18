@@ -1,4 +1,7 @@
-const BASE_URL = '/api';
+const rawBase = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+const BASE_URL = rawBase
+  ? (rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`)
+  : '/api';
 
 export const api = {
   // Auth & Rate Limit
