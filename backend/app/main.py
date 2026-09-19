@@ -23,10 +23,12 @@ from app.api.github import router as github_router
 from app.api.repository import router as repo_router
 from app.api.chat import router as chat_router
 from app.api.tools import router as tools_router
+from app.services.context_manager import context_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Start background repo watcher for newly created repositories
+    # Startup: Preload repository context memory and start background repo watcher
+    asyncio.create_task(context_manager.initialize())
     watcher_task = asyncio.create_task(sync_service.start_background_watcher(interval_seconds=30))
     yield
     # Shutdown

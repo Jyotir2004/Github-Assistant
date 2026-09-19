@@ -51,8 +51,8 @@ class ChatMessage(BaseModel):
     content: str
 
 class ChatRequest(BaseModel):
-    owner: str
-    repo: str
+    owner: Optional[str] = None
+    repo: Optional[str] = None
     message: str
     branch: Optional[str] = "main"
     history: Optional[List[ChatMessage]] = Field(default_factory=list)
@@ -71,6 +71,10 @@ class ChatResponse(BaseModel):
     answer: str
     sources: List[RetrievedContext] = Field(default_factory=list)
     model_used: str
+    active_repo: Optional[str] = None
+    repo_switched: bool = False
+    switched_repo: Optional[RepositoryItem] = None
+    detected_repo: Optional[str] = None
 
 class IndexRepoRequest(BaseModel):
     owner: str

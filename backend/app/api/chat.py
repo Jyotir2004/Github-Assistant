@@ -2,7 +2,7 @@ import json
 from fastapi import APIRouter, HTTPException
 # pyrefly: ignore [missing-import]
 from fastapi.responses import StreamingResponse
-from ..models.schemas import ChatRequest, ChatResponse, RetrievedContext
+from ..models.schemas import ChatRequest, ChatResponse, RetrievedContext, RepositoryItem
 from ..agents.github_agent import github_agent
 
 router = APIRouter(prefix="/api/chat", tags=["Chat & RAG"])
@@ -10,8 +10,8 @@ router = APIRouter(prefix="/api/chat", tags=["Chat & RAG"])
 @router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    RAG-powered chat with the GitHub repository.
-    Searches ChromaDB vector index, enriches prompt, and queries the LLM.
+    RAG-powered chat with multi-repository context and automatic repository switching.
+    Searches ChromaDB vector index, enriches prompt with repo manifests & file tree, and queries the LLM.
     """
     try:
         history_dicts = [h.model_dump() for h in request.history] if request.history else []
@@ -23,7 +23,8 @@ async def chat(request: ChatRequest):
             current_file_path=request.current_file_path,
             current_file_content=request.current_file_content,
             use_rag=request.use_rag,
-            model=request.model
+            model=request.model,
+            branch=request.branch or "main"
         )
 
         sources = [
@@ -36,10 +37,30 @@ async def chat(request: ChatRequest):
             for s in result.get("sources", [])
         ]
 
+        switched_repo_item = None
+        if result.get("switched_repo"):
+            sr = result["switched_repo"]
+            switched_repo_item = RepositoryItem(
+                name=sr.get("name", ""),
+                full_name=sr.get("full_name", ""),
+                description=sr.get("description"),
+                private=sr.get("private", False),
+                html_url=sr.get("html_url", ""),
+                default_branch=sr.get("default_branch", "main"),
+                language=sr.get("language"),
+                stargazers_count=sr.get("stargazers_count", 0),
+                forks_count=sr.get("forks_count", 0),
+                updated_at=sr.get("updated_at")
+            )
+
         return ChatResponse(
             answer=result["answer"],
             sources=sources,
-            model_used=result["model_used"]
+            model_used=result["model_used"],
+            active_repo=result.get("active_repo"),
+            repo_switched=result.get("repo_switched", False),
+            switched_repo=switched_repo_item,
+            detected_repo=result.get("detected_repo")
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")

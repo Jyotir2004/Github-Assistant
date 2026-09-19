@@ -97,13 +97,13 @@ export default function App() {
   };
 
   const handleSendMessage = async () => {
-    if (!inputQuery.trim() || !selectedRepo) return;
+    if (!inputQuery.trim()) return;
     const query = inputQuery;
     setInputQuery('');
     const newHistory = [...chatMessages, { role: 'user', content: query }];
     setChatMessages(newHistory);
 
-    const parts = selectedRepo.full_name.split('/');
+    const parts = selectedRepo ? selectedRepo.full_name.split('/') : [null, null];
     try {
       const res = await api.chat({
         owner: parts[0],
@@ -115,9 +115,25 @@ export default function App() {
         use_rag: useRag
       });
 
+      // Automatic repository switching from AI context memory
+      if (res.repo_switched && res.switched_repo) {
+        const switched = res.switched_repo;
+        let targetRepo = repositories.find(r => r.full_name.toLowerCase() === switched.full_name.toLowerCase());
+        if (!targetRepo) {
+          targetRepo = switched;
+          setRepositories(prev => [switched, ...prev.filter(r => r.full_name !== switched.full_name)]);
+        }
+        await handleSelectRepo(targetRepo);
+      }
+
       setChatMessages(prev => [
         ...prev,
-        { role: 'assistant', content: res.answer, sources: res.sources }
+        { 
+          role: 'assistant', 
+          content: res.answer, 
+          sources: res.sources,
+          switchedRepo: res.repo_switched && res.switched_repo ? res.switched_repo.full_name : null
+        }
       ]);
     } catch (err) {
       setChatMessages(prev => [
@@ -273,12 +289,29 @@ export default function App() {
               <div key={idx} className={`chat-msg ${msg.role}`}>
                 <div className="msg-avatar">{msg.role === 'user' ? '👤' : '🤖'}</div>
                 <div className="msg-bubble">
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</p>
-                  {msg.sources && (
+                  {msg.switchedRepo && (
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      border: '1px solid rgba(56, 189, 248, 0.4)',
+                      borderRadius: '6px',
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      color: '#38bdf8',
+                      marginBottom: '8px'
+                    }}>
+                      <span>🔄</span>
+                      <span>Auto-selected repository: <strong>{msg.switchedRepo}</strong></span>
+                    </div>
+                  )}
+                  <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', margin: '4px 0' }}>{msg.content}</p>
+                  {msg.sources && msg.sources.length > 0 && (
                     <div className="source-citations">
                       <div className="citation-header">📚 Sources ({msg.sources.length}):</div>
                       {msg.sources.map((s, i) => (
-                        <span key={i} className="citation-chip">📄 {s.file_path}:{s.start_line}</span>
+                        <span key={i} className="citation-chip">📄 {s.file_path}:{s.chunk_index || 1}</span>
                       ))}
                     </div>
                   )}

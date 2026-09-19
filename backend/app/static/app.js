@@ -1012,21 +1012,48 @@ async function handleSendMessage() {
     }
 
     const data = await resp.json();
-    assistantBubble.innerHTML = marked.parse(data.answer);
+
+    // Check if repository was automatically switched by AI Context Manager
+    if (data.repo_switched && data.switched_repo) {
+      const switched = data.switched_repo;
+      let target = state.repositories.find(r => r.full_name.toLowerCase() === switched.full_name.toLowerCase());
+      if (!target) {
+        target = switched;
+        state.repositories.unshift(switched);
+        const opt = document.createElement('option');
+        opt.value = switched.full_name;
+        opt.textContent = `${switched.name} (${switched.language || 'Codebase'})`;
+        repoSelect.prepend(opt);
+      }
+      showToast(`🔄 Auto-selected repository: ${switched.full_name}`);
+      await selectRepository(target);
+    }
+
+    let bubbleHtml = '';
+    if (data.repo_switched && data.switched_repo) {
+      bubbleHtml += `
+        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: #38bdf8; margin-bottom: 8px;">
+          <span>🔄</span>
+          <span>Auto-selected repository: <strong>${data.switched_repo.full_name}</strong></span>
+        </div>
+      `;
+    }
+    bubbleHtml += marked.parse(data.answer);
 
     // Add source citation chips if RAG was used
     if (data.sources && data.sources.length > 0) {
       let citationsHtml = `
         <div class="source-citations">
-          <div class="citation-header">📚 ${data.sources.length} Context Chunks (ChromaDB):</div>
+          <div class="citation-header">📚 ${data.sources.length} Context Chunks:</div>
       `;
       data.sources.forEach(s => {
-        citationsHtml += `<span class="citation-chip" title="Lines ${s.start_line}-${s.end_line}">📄 ${s.file_path}:${s.start_line}</span>`;
+        citationsHtml += `<span class="citation-chip" title="Lines ${s.start_line}-${s.end_line}">📄 ${s.file_path}:${s.chunk_index || 1}</span>`;
       });
       citationsHtml += '</div>';
-      assistantBubble.innerHTML += citationsHtml;
+      bubbleHtml += citationsHtml;
     }
 
+    assistantBubble.innerHTML = bubbleHtml;
     state.chatHistory.push({ role: 'assistant', content: data.answer });
   } catch (err) {
     assistantBubble.innerHTML = `<p style="color: #f43f5e;">Error: ${err.message}</p>`;
