@@ -320,18 +320,121 @@ export default function App() {
             ))}
           </div>
 
+          {/* Ultra-Modern AI Prompt / Type Bar */}
           <div className="chat-input-area">
-            <div className="input-box-wrapper">
+            {/* Quick Suggestion Chips */}
+            <div className="quick-suggestion-chips">
+              <button 
+                className="suggestion-chip" 
+                onClick={() => { setInputQuery("what i have used for my_portfolio frontend"); }}
+              >
+                📦 Frontend in my_portfolio
+              </button>
+              <button 
+                className="suggestion-chip" 
+                onClick={() => { setInputQuery("Explain the overall architecture and data flow of this repository"); }}
+              >
+                🏛️ Architecture & Flow
+              </button>
+              <button 
+                className="suggestion-chip" 
+                onClick={() => { setInputQuery("Check this repository for potential bugs or security vulnerabilities"); }}
+              >
+                🛡️ Bug & Security Audit
+              </button>
+              <button 
+                className="suggestion-chip" 
+                onClick={() => { setInputQuery("Where is the main entry point and how does the application start?"); }}
+              >
+                🚀 Main Entrypoint
+              </button>
+            </div>
+
+            {/* Floating Glassmorphic Type Bar */}
+            <div className="modern-type-bar">
+              {/* Context Row */}
+              <div className="typebar-context-row">
+                <span className="context-pill repo">
+                  📁 {selectedRepo ? selectedRepo.name : 'All Repos Context'}
+                </span>
+                {activeFile && (
+                  <span className="context-pill file">
+                    📄 {activeFile.path.split('/').pop()}
+                    <button 
+                      className="pill-close" 
+                      onClick={() => setActiveFile(null)} 
+                      title="Detach file from prompt"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                <span className={`context-pill ${useRag ? 'rag' : ''}`}>
+                  🧠 RAG {useRag ? 'Active' : 'Off'}
+                </span>
+              </div>
+
+              {/* Textarea Field */}
               <textarea
+                className="typebar-input-field"
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
-                placeholder="Ask about this repo, files, functions..."
+                onKeyDown={(e) => { 
+                  if (e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    handleSendMessage(); 
+                  } 
+                }}
+                placeholder="Ask about any repository, frontend stack, bugs, or code..."
                 rows={1}
               />
-              <button className="send-btn" onClick={handleSendMessage}>➤</button>
+
+              {/* Bottom Actions & Controls Row */}
+              <div className="typebar-bottom-row">
+                <div className="typebar-actions-left">
+                  <button 
+                    type="button" 
+                    className="typebar-chip"
+                    onClick={() => setInputQuery(prev => prev ? `Explain: ${prev}` : "Explain this repository")}
+                  >
+                    ✨ Explain
+                  </button>
+                  <button 
+                    type="button" 
+                    className="typebar-chip"
+                    onClick={() => setInputQuery(prev => prev ? `Audit bugs in: ${prev}` : "Find bugs in this code")}
+                  >
+                    🐛 Bugs
+                  </button>
+                  <button 
+                    type="button" 
+                    className="typebar-chip"
+                    onClick={() => setInputQuery(prev => prev ? `Tech stack for: ${prev}` : "What tech stack is used here?")}
+                  >
+                    📦 Stack
+                  </button>
+                </div>
+
+                <div className="typebar-controls-right">
+                  <span className="typebar-hint">
+                    <kbd>Enter ↵</kbd> send
+                  </span>
+                  <button 
+                    className="modern-send-btn" 
+                    onClick={handleSendMessage}
+                    disabled={!inputQuery.trim()}
+                    title="Send message (Enter)"
+                  >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+
         </aside>
       </div>
 

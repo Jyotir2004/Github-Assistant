@@ -204,19 +204,28 @@ function setupEventListeners() {
     `;
   });
 
-  // Quick Prompts
-  document.querySelectorAll('.quick-prompt-btn').forEach(btn => {
+  // Quick Prompts & Suggestion Chips
+  document.querySelectorAll('.quick-prompt-btn, .suggestion-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       chatInput.value = btn.dataset.prompt;
-      handleSendMessage();
+      chatInput.focus();
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
     });
   });
+
+  window.prefixChatPrompt = function(prefix) {
+    if (chatInput.value.startsWith(prefix)) return;
+    chatInput.value = prefix + (chatInput.value || '');
+    chatInput.focus();
+  };
 
   // Detach active file
   detachFileBtn.addEventListener('click', () => {
     state.activeFile = null;
     activeFileIndicator.style.display = 'none';
   });
+
 
   // Modals
   closeActionModal.addEventListener('click', () => actionModal.style.display = 'none');
@@ -386,6 +395,9 @@ async function selectRepository(repo) {
   statBranch.textContent = repo.default_branch;
   statLanguage.textContent = repo.language || 'Codebase';
   repoStatsPills.style.display = 'flex';
+
+  const typebarRepoPill = document.getElementById('typebarRepoPill');
+  if (typebarRepoPill) typebarRepoPill.textContent = `📁 ${repo.name}`;
 
   // Load Tree, Index status, Issues & Commits
   await Promise.all([

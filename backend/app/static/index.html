@@ -212,22 +212,46 @@
 
       <!-- Chat Input Area -->
       <div class="chat-input-area">
-        <div class="active-file-indicator" id="activeFileIndicator" style="display: none;">
-          <span class="indicator-icon">📎</span>
-          <span id="attachedFileName">active_file.py</span>
-          <button id="detachFileBtn" class="detach-btn" title="Remove file context">×</button>
+        <!-- Quick Suggestion Chips -->
+        <div class="quick-suggestion-chips">
+          <button class="suggestion-chip" data-prompt="what i have used for my_portfolio frontend">📦 Frontend in my_portfolio</button>
+          <button class="suggestion-chip" data-prompt="Explain the overall architecture and data flow of this repository">🏛️ Architecture & Flow</button>
+          <button class="suggestion-chip" data-prompt="Check this repository for potential bugs or security vulnerabilities">🛡️ Bug & Security Audit</button>
+          <button class="suggestion-chip" data-prompt="Where is the main entry point and how does the application start?">🚀 Main Entrypoint</button>
         </div>
-        <div class="input-box-wrapper">
-          <textarea id="chatInput" placeholder="Ask anything about this repo, files, or functions..." rows="1"></textarea>
-          <button id="sendChatBtn" class="send-btn" title="Send query">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
+
+        <!-- Modern Floating Glassmorphic Type Bar -->
+        <div class="modern-type-bar">
+          <div class="typebar-context-row">
+            <span class="context-pill repo" id="typebarRepoPill">📁 Active Repo Context</span>
+            <span class="context-pill file" id="activeFileIndicator" style="display: none;">
+              📄 <span id="attachedFileName">active_file.py</span>
+              <button id="detachFileBtn" class="pill-close" title="Remove file context">×</button>
+            </span>
+          </div>
+
+          <textarea id="chatInput" class="typebar-input-field" placeholder="Ask about any repository, frontend stack, bugs, or code..." rows="1"></textarea>
+
+          <div class="typebar-bottom-row">
+            <div class="typebar-actions-left">
+              <button type="button" class="typebar-chip" onclick="prefixChatPrompt('Explain: ')">✨ Explain</button>
+              <button type="button" class="typebar-chip" onclick="prefixChatPrompt('Audit bugs in: ')">🐛 Bugs</button>
+              <button type="button" class="typebar-chip" onclick="prefixChatPrompt('What tech stack is used in: ')">📦 Stack</button>
+            </div>
+            <div class="typebar-controls-right">
+              <span class="typebar-hint"><kbd>Enter ↵</kbd> send</span>
+              <button id="sendChatBtn" class="modern-send-btn" title="Send query (Enter)">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </aside>
+
   </main>
 
   <!-- AI Action Result Modal -->
