@@ -241,6 +241,23 @@ function setupEventListeners() {
   saveSettingsBtn.addEventListener('click', handleSaveSettings);
 }
 
+async function safeParseError(resp, defaultMsg = 'Request failed') {
+  try {
+    const contentType = resp.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const err = await resp.json();
+      return err.detail || err.message || err.error || defaultMsg;
+    }
+    const text = await resp.text();
+    if (text.includes('The page could not be found') || resp.status === 404) {
+      return `Endpoint not found (404). Check backend connection.`;
+    }
+    return text.slice(0, 150) || defaultMsg;
+  } catch {
+    return defaultMsg;
+  }
+}
+
 // --- API Calls & Data Loading ---
 
 async function loadUserAndConfig() {
@@ -462,8 +479,8 @@ async function handleIndexRepo() {
     });
 
     if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || 'Indexing failed');
+      const errMsg = await safeParseError(resp, 'Indexing failed');
+      throw new Error(errMsg);
     }
 
     const result = await resp.json();
@@ -701,8 +718,8 @@ async function triggerCodeAction(action) {
     });
 
     if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || 'Action failed');
+      const errMsg = await safeParseError(resp, 'Action failed');
+      throw new Error(errMsg);
     }
 
     const data = await resp.json();
@@ -743,8 +760,8 @@ async function triggerDocAction(docType) {
     });
 
     if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || 'Doc generation failed');
+      const errMsg = await safeParseError(resp, 'Doc generation failed');
+      throw new Error(errMsg);
     }
 
     const data = await resp.json();
@@ -783,8 +800,8 @@ window.analyzeIssue = async function(number, isPr) {
     });
 
     if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || 'Diagnosis failed');
+      const errMsg = await safeParseError(resp, 'Diagnosis failed');
+      throw new Error(errMsg);
     }
 
     const data = await resp.json();
@@ -1019,8 +1036,8 @@ async function handleSendMessage() {
     });
 
     if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || 'Chat query failed');
+      const errMsg = await safeParseError(resp, 'Chat query failed');
+      throw new Error(errMsg);
     }
 
     const data = await resp.json();

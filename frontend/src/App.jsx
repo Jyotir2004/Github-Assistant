@@ -31,6 +31,13 @@ export default function App() {
         }
       } catch (err) {
         console.error('Init error:', err);
+        setChatMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: `⚠️ Warning: Unable to connect to backend API: ${err.message}. If deploying to Vercel/Render, check that VITE_API_BASE_URL (or VITE_API_URL) is set in your environment variables and your backend is online.`
+          }
+        ]);
       }
     }
     init();
